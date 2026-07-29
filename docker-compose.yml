@@ -28,6 +28,7 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+    restart: unless-stopped
 
 volumes:
   pgdata:

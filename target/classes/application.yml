@@ -32,4 +32,4 @@ telegram:
 logging:
   level:
     com.example.campaignbot: INFO
-    org.telegram: WARN
+    oorg.telegram.telegrambots.longpolling: DEBUG
