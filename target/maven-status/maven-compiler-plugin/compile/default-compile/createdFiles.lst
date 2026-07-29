@@ -1,0 +1,15 @@
+com/example/campaignbot/service/FacebookAdsService$RawCampaign$RawCampaignBuilder.class
+com/example/campaignbot/scheduler/CampaignSyncScheduler.class
+com/example/campaignbot/repository/FacebookPageRepository.class
+com/example/campaignbot/entity/FacebookPage$FacebookPageBuilder.class
+com/example/campaignbot/entity/Campaign.class
+com/example/campaignbot/service/FacebookAdsService$RawCampaign.class
+com/example/campaignbot/entity/Campaign$CampaignBuilder.class
+com/example/campaignbot/service/FacebookAdsService.class
+com/example/campaignbot/CampaignBotApplication.class
+com/example/campaignbot/repository/CampaignRepository.class
+com/example/campaignbot/bot/CampaignBot.class
+com/example/campaignbot/config/RestTemplateConfig.class
+com/example/campaignbot/entity/FacebookPage.class
+com/example/campaignbot/service/CampaignService.class
+com/example/campaignbot/service/TelegramMessageService.class
