@@ -11,10 +11,18 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
 
+    hikari:
+      connection-timeout: 30000
+      maximum-pool-size: 10
+      minimum-idle: 2
+      initialization-fail-timeout: 60000
+
   jpa:
     hibernate:
       ddl-auto: update
+
     show-sql: false
+
     properties:
       hibernate:
         format_sql: true
@@ -22,8 +30,7 @@ spring:
 
   sql:
     init:
-      mode: always
-      schema-locations: classpath:schema.sql
+      mode: never
 
 telegram:
   bot:
@@ -32,4 +39,4 @@ telegram:
 logging:
   level:
     com.example.campaignbot: INFO
-    oorg.telegram.telegrambots.longpolling: DEBUG
+    org.telegram.telegrambots.longpolling: DEBUG

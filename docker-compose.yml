@@ -1,24 +1,48 @@
 version: "3.9"
 
 services:
+
   postgres:
     image: postgres:16-alpine
     container_name: campaign-bot-db
+
+    restart: unless-stopped
+
     environment:
       POSTGRES_DB: campaign_bot
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+
     ports:
       - "5432:5432"
+
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./database/init:/docker-entrypoint-initdb.d
 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d campaign_bot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
+    command:
+      - postgres
+      - -c
+      - log_connections=on
+      - -c
+      - log_disconnections=on
+      - -c
+      - log_statement=none
+
   ads-manager-reporting-bot:
     build: .
 
+    restart: unless-stopped
+
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
     ports:
       - "8080:8080"
@@ -28,7 +52,6 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
-    restart: unless-stopped
 
 volumes:
   pgdata:
