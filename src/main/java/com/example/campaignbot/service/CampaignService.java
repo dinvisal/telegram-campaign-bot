@@ -43,6 +43,7 @@ public class CampaignService {
      */
     @Transactional
     public void syncAllPages() {
+
         List<FacebookPage> pages = pageRepository.findByActiveTrue();
         log.info("Syncing campaigns for {} pages", pages.size());
 
@@ -58,23 +59,29 @@ public class CampaignService {
 
     @Transactional
     public void syncPage(FacebookPage page) {
+        // Mark all existing campaigns for this page inactive.
+        campaignRepository.markInactiveByPageId(page.getPageId());
+
         List<FacebookAdsService.RawCampaign> rawCampaigns = facebookAdsService.fetchCampaigns(page);
         log.info("Fetched {} campaigns for page {}", rawCampaigns.size(), page.getPageName());
 
+        List<Campaign> campaignsToSave = new ArrayList<>();
+
         for (var raw : rawCampaigns) {
-            log.debug("id: {}", raw.getCampaignId());
             if (raw == null || raw.getCampaignId() == null || raw.getCampaignId().isBlank()) {
                 log.warn("Skipping campaign with missing campaign id for page {}", page.getPageId());
                 continue;
             }
+            log.debug("id: {}", raw.getCampaignId());
 
-            /* * Hide campaigns with no spend today. */ 
-            BigDecimal todaySpend = raw.getSpend() != null ? raw.getSpend()
-                    : BigDecimal.ZERO;
-            if (todaySpend.compareTo(BigDecimal.ZERO) <= 0) {
-                log.debug("Skipping campaign {} because today's spend is {}", raw.getCampaignId(), todaySpend);
-                continue;
-            }
+            /* * Hide campaigns with no spend today. */
+            // BigDecimal todaySpend = raw.getSpend() != null ? raw.getSpend()
+            // : BigDecimal.ZERO;
+            // if (todaySpend.compareTo(BigDecimal.ZERO) <= 0) {
+            // log.debug("Skipping campaign {} because today's spend is {}",
+            // raw.getCampaignId(), todaySpend);
+            // continue;
+            // }
 
             Campaign campaign = campaignRepository
                     .findByCampaignId(raw.getCampaignId())
@@ -87,6 +94,7 @@ public class CampaignService {
                         .build();
             }
 
+            log.info("campaign id: {} status {} effective_status {}", raw.getCampaignId(), raw.getStatus(), raw.getEffectiveStatus());
             campaign.setCampaignId(raw.getCampaignId());
             campaign.setCampaignName(raw.getCampaignName());
             campaign.setStatus(raw.getStatus());
@@ -103,8 +111,15 @@ public class CampaignService {
             campaign.setCostPerMessage(raw.getCostPerMessage());
             campaign.setPage(page);
 
-            campaignRepository.save(campaign);
+            campaignsToSave.add(campaign);
         }
+        if (!campaignsToSave.isEmpty()) {
+            campaignRepository.saveAll(campaignsToSave);
+        }
+
+        log.info("Saved {} campaigns for page {}",
+                campaignsToSave.size(),
+                page.getPageName());
 
         log.debug("Sync complete for page {}", page.getPageName());
     }
