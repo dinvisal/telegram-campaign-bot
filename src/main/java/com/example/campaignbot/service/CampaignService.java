@@ -1,5 +1,6 @@
 package com.example.campaignbot.service;
 
+import com.example.campaignbot.dto.RawCampaign;
 import com.example.campaignbot.entity.Campaign;
 import com.example.campaignbot.entity.FacebookPage;
 import com.example.campaignbot.repository.CampaignRepository;
@@ -62,53 +63,44 @@ public class CampaignService {
         // Mark all existing campaigns for this page inactive.
         campaignRepository.markInactiveByPageId(page.getPageId());
 
-        List<FacebookAdsService.RawCampaign> rawCampaigns = facebookAdsService.fetchCampaigns(page);
+        List<RawCampaign> rawCampaigns = facebookAdsService.fetchCampaigns(page);
         log.info("Fetched {} campaigns for page {}", rawCampaigns.size(), page.getPageName());
 
         List<Campaign> campaignsToSave = new ArrayList<>();
 
-        for (var raw : rawCampaigns) {
-            if (raw == null || raw.getCampaignId() == null || raw.getCampaignId().isBlank()) {
+        for (RawCampaign raw : rawCampaigns) {
+            if (raw == null || raw.campaignId() == null || raw.campaignId().isBlank()) {
                 log.warn("Skipping campaign with missing campaign id for page {}", page.getPageId());
                 continue;
             }
-            log.debug("id: {}", raw.getCampaignId());
-
-            /* * Hide campaigns with no spend today. */
-            // BigDecimal todaySpend = raw.getSpend() != null ? raw.getSpend()
-            // : BigDecimal.ZERO;
-            // if (todaySpend.compareTo(BigDecimal.ZERO) <= 0) {
-            // log.debug("Skipping campaign {} because today's spend is {}",
-            // raw.getCampaignId(), todaySpend);
-            // continue;
-            // }
+            log.debug("id: {}", raw.campaignId());
 
             Campaign campaign = campaignRepository
-                    .findByCampaignId(raw.getCampaignId())
+                    .findByCampaignId(raw.campaignId())
                     .orElse(null);
 
             if (campaign == null) {
                 campaign = Campaign.builder()
-                        .campaignId(raw.getCampaignId())
+                        .campaignId(raw.campaignId())
                         .page(page)
                         .build();
             }
 
-            log.info("campaign id: {} status {} effective_status {}", raw.getCampaignId(), raw.getStatus(), raw.getEffectiveStatus());
-            campaign.setCampaignId(raw.getCampaignId());
-            campaign.setCampaignName(raw.getCampaignName());
-            campaign.setStatus(raw.getStatus());
-            campaign.setObjective(raw.getObjective());
-            campaign.setDailyBudget(raw.getDailyBudget());
-            campaign.setLifetimeBudget(raw.getLifetimeBudget());
-            campaign.setStartDate(raw.getStartDate());
-            campaign.setEndDate(raw.getEndDate());
-            campaign.setSpend(raw.getSpend());
-            campaign.setImpressions(raw.getImpressions());
-            campaign.setClicks(raw.getClicks());
+            log.info("campaign id: {} status {} effective_status {}", raw.campaignId(), raw.status(), raw.effectiveStatus());
+            campaign.setCampaignId(raw.campaignId());
+            campaign.setCampaignName(raw.campaignName());
+            campaign.setStatus(raw.status());
+            campaign.setObjective(raw.objective());
+            campaign.setDailyBudget(raw.dailyBudget());
+            campaign.setLifetimeBudget(raw.lifetimeBudget());
+            campaign.setStartDate(raw.startDate());
+            campaign.setEndDate(raw.endDate());
+            campaign.setSpend(raw.spend());
+            campaign.setImpressions(raw.impressions());
+            campaign.setClicks(raw.clicks());
             campaign.setLastSyncedAt(LocalDateTime.now());
-            campaign.setMessageCount(raw.getMessageCount());
-            campaign.setCostPerMessage(raw.getCostPerMessage());
+            campaign.setMessageCount(raw.messageCount());
+            campaign.setCostPerMessage(raw.costPerMessage());
             campaign.setPage(page);
 
             campaignsToSave.add(campaign);
