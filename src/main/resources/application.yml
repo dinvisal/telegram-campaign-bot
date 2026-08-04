@@ -15,18 +15,17 @@ spring:
       connection-timeout: 30000
       maximum-pool-size: 10
       minimum-idle: 2
-      initialization-fail-timeout: 60000
 
   jpa:
     hibernate:
       ddl-auto: validate
 
+    open-in-view: false
     show-sql: false
 
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
 
   sql:
     init:
