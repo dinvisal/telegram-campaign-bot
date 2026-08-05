@@ -6,7 +6,7 @@ spring:
     name: telegram-campaign-bot
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgresql:5432/campaign_bot}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/campaign_bot}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
     password: ${SPRING_DATASOURCE_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
