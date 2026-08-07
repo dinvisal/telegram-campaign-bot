@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  # Dummy token — the app boots and the bot session logs 401s, but the Spring
+  # context starts fine. CI only asserts DB connectivity + schema validation.
+  TELEGRAM_BOT_TOKEN: "1234567890:AAEXAMPLECI_DO_NOT_USE"
+
+jobs:
+  # Positive path: stack must come up and connect to PostgreSQL
+  verify-stack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker compose build
+
+      - name: Start stack
+        run: docker compose up -d
+
+      - name: Wait for HikariPool connection (fail-fast guard)
+        run: |
+          for i in $(seq 1 60); do
+            if docker compose logs ads-manager-reporting-bot 2>&1 | grep -q "HikariPool-1 - Added connection"; then
+              echo "OK: app connected to PostgreSQL"
+              exit 0
+            fi
+            if docker compose logs ads-manager-reporting-bot 2>&1 | grep -qE "password authentication failed|Schema-validation|Failed to validate"; then
+              echo "FAIL: DB credential/schema mismatch" >&2
+              docker compose logs ads-manager-reporting-bot >&2
+              exit 1
+            fi
+            sleep 2
+          done
+          echo "FAIL: app never connected to PostgreSQL" >&2
+          docker compose logs ads-manager-reporting-bot >&2
+          exit 1
+
+      - name: Verify app started
+        run: |
+          docker compose logs ads-manager-reporting-bot 2>&1 | grep -q "Started CampaignBotApplication"
+          echo "OK: app started"
+
+      - name: Verify schema seeded by init scripts
+        run: |
+          docker exec campaign-bot-db psql -U postgres -d campaign_bot \
+            -tAc "SELECT count(*) FROM facebook_pages" | grep -qE "[1-9]"
+          docker exec campaign-bot-db psql -U postgres -d campaign_bot \
+            -tAc "SELECT count(*) FROM information_schema.tables WHERE table_name='campaigns'" | grep -q "1"
+          echo "OK: tables seeded"
+
+      - name: Stop stack
+        if: always()
+        run: docker compose down
+
+  # Negative path: wrong DB password must crash the app at startup, not later
+  fail-fast-on-bad-credentials:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker compose build
+
+      - name: Start only postgres
+        run: docker compose up -d postgres
+
+      - name: Wait for postgres healthy
+        run: |
+          for i in $(seq 1 30); do
+            STATUS=$(docker inspect --format '{{.State.Health.Status}}' campaign-bot-db 2>/dev/null || echo starting)
+            if [ "$STATUS" = "healthy" ]; then echo "OK: postgres healthy"; exit 0; fi
+            sleep 2
+          done
+          echo "FAIL: postgres never became healthy" >&2
+          exit 1
+
+      - name: Assert app fails fast on wrong password
+        run: |
+          set +e
+          docker run --rm --network host \
+            -e SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/campaign_bot \
+            -e SPRING_DATASOURCE_USERNAME=postgres \
+            -e SPRING_DATASOURCE_PASSWORD=wrong-password \
+            -e TELEGRAM_BOT_TOKEN="$TELEGRAM_BOT_TOKEN" \
+            telegram-campaign-bot-ads-manager-reporting-bot > /tmp/app-bad.log 2>&1
+          EXIT=$?
+          set -e
+          if [ "$EXIT" -eq 0 ]; then
+            echo "FAIL: app started despite wrong DB password — fail-fast is broken" >&2
+            exit 1
+          fi
+          grep -q "password authentication failed" /tmp/app-bad.log
+          echo "OK: app refused to start on bad credentials (exit $EXIT)"
