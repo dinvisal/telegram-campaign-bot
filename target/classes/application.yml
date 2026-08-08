@@ -26,6 +26,10 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        # Explicit dialect: without it, Hibernate must open a JDBC connection to
+        # read metadata — if that connection fails (auth, network), you get a
+        # misleading "Unable to determine Dialect" error instead of the real one.
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
   sql:
     init:

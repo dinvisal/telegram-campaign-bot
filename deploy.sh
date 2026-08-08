@@ -105,12 +105,12 @@ for i in $(seq 1 30); do
   fi
 
   # Fail-fast path: the exact symptoms we deploy to catch
-  if echo "$LOGS" | grep -qE "password authentication failed|Schema-validation|Failed to validate"; then
-    echo "!!! FATAL: DB credential or schema mismatch detected." >&2
-    echo "!!! The postgres volume was initialized with a DIFFERENT password than DB_PASSWORD=$DB_PASSWORD." >&2
+  if echo "$LOGS" | grep -qE "password authentication failed|Schema-validation|Failed to validate|Unable to determine Dialect"; then
+    echo "!!! FATAL: app could not connect to / validate the database." >&2
+    echo "!!! Likely the postgres volume carries a DIFFERENT password than DB_PASSWORD=$DB_PASSWORD." >&2
     echo "!!! Fix: ./deploy.sh --reset-db   (volume is disposable; data re-seeds from database/init)" >&2
-    echo "!!! Full error:" >&2
-    echo "$LOGS" | grep -iE "fatal|validation|authentication" | tail -5 >&2
+    echo "!!! Root cause (grep for Caused by / PSQLException):" >&2
+    echo "$LOGS" | grep -E "Caused by|PSQLException|Connection refused|UnknownHost|authentication failed|Unable to determine Dialect" | tail -6 >&2
     exit 1
   fi
 
@@ -118,5 +118,10 @@ for i in $(seq 1 30); do
 done
 
 echo "!!! FATAL: app did not connect to PostgreSQL within 60s." >&2
-docker logs "$CONTAINER_ID" 2>&1 | tail -20 >&2
+echo "!!! Root cause (grep for Caused by / PSQLException):" >&2
+docker logs "$CONTAINER_ID" 2>&1 \
+  | grep -E "Caused by|PSQLException|Connection refused|UnknownHost|authentication failed|Unable to determine Dialect|APPLICATION FAILED" \
+  | tail -8 >&2
+echo "!!! Last log lines for context:" >&2
+docker logs "$CONTAINER_ID" 2>&1 | tail -5 >&2
 exit 1
