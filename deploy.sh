@@ -165,10 +165,10 @@ for i in $(seq 1 30); do
     exit 0
   fi
 
-  if echo "$LOGS" | grep -qE "password authentication failed|Schema-validation|Failed to validate|Unable to determine Dialect"; then
+  if echo "$LOGS" | grep -qE "password authentication failed|Schema-validation|Failed to validate|Unable to determine Dialect|does not exist|missing table"; then
     echo "!!! FATAL: app could not connect to / validate the database." >&2
     echo "!!! Root cause:" >&2
-    echo "$LOGS" | grep -E "Caused by|PSQLException|Connection refused|UnknownHost|authentication failed|Unable to determine Dialect" | tail -6 >&2
+    echo "$LOGS" | grep -E "Caused by|PSQLException|Connection refused|UnknownHost|authentication failed|Unable to determine Dialect|does not exist|missing table" | tail -6 >&2
     exit 1
   fi
 
