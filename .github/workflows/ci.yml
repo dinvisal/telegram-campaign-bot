@@ -9,6 +9,9 @@ env:
   # Dummy token — the app boots and the bot session logs 401s, but the Spring
   # context starts fine. CI only asserts DB connectivity + schema validation.
   TELEGRAM_BOT_TOKEN: "1234567890:AAEXAMPLECI_DO_NOT_USE"
+  # Pin the compose project name so volume names are deterministic in CI
+  # (deploy.sh --reset-db and the self-healing job depend on it).
+  COMPOSE_PROJECT_NAME: telegram-campaign-bot
 
 jobs:
   # Positive path: stack must come up and connect to PostgreSQL
@@ -97,3 +100,41 @@ jobs:
           fi
           grep -q "password authentication failed" /tmp/app-bad.log
           echo "OK: app refused to start on bad credentials (exit $EXIT)"
+
+  # Self-healing path: a stale-volume password (the classic production bug)
+  # must be detected and reset automatically by deploy.sh
+  self-healing-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker compose build
+
+      - name: Poison the volume with a wrong password
+        run: |
+          # Pre-create the exact volume compose will use, initialized with a
+          # wrong password — this simulates production's stale volume.
+          docker volume create telegram-campaign-bot_pgdata
+          docker run --rm -d --name poison-db \
+            -e POSTGRES_PASSWORD=wrong-password \
+            -v telegram-campaign-bot_pgdata:/var/lib/postgresql/data \
+            postgres:16-alpine
+          for i in $(seq 1 60); do
+            if docker logs poison-db 2>&1 | grep -q "database system is ready to accept connections"; then
+              break
+            fi
+            sleep 2
+          done
+          docker stop poison-db >/dev/null
+          echo "OK: volume poisoned with wrong password"
+
+      - name: Run deploy.sh — must self-heal
+        run: |
+          sh deploy.sh --skip-build
+
+      - name: Assert the app actually connected
+        run: |
+          CID=$(docker compose ps -q ads-manager-reporting-bot)
+          docker logs "$CID" 2>&1 | grep -q "HikariPool-1 - Added connection"
+          echo "OK: app connected — stale volume was reset automatically"
