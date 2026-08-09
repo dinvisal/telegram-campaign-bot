@@ -57,18 +57,12 @@ done
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-find_pgdata_volume() {
-  docker volume ls --format '{{.Name}}' | grep -E '_pgdata$' || true
-}
-
 remove_pgdata_volume() {
-  local volumes
-  volumes=$(find_pgdata_volume)
-  if [ -n "$volumes" ]; then
-    echo ">>> Removing postgres volume(s): $volumes"
-    # shellcheck disable=SC2086
-    docker volume rm $volumes >/dev/null
-  fi
+  # docker compose down -v removes ALL volumes declared in this compose file
+  # (here just pgdata) regardless of the actual volume name — robust against
+  # differently-named volumes on production.
+  echo ">>> Removing postgres volume(s) via 'docker compose down -v'..."
+  docker compose down -v >/dev/null 2>&1 || true
 }
 
 wait_postgres_healthy() {
@@ -120,17 +114,18 @@ wait_postgres_healthy
 if test_db_password; then
   echo ">>> OK: DB_PASSWORD=$DB_PASSWORD works against the live database."
 else
-  echo "!!! Stale volume detected: password on volume does NOT match DB_PASSWORD=$DB_PASSWORD."
+  echo "!!! Volume problem detected: either the password on the volume does NOT match"
+  echo "!!! DB_PASSWORD=$DB_PASSWORD, or the 'campaign_bot' database was never created."
   echo "!!! Resetting volume automatically (data is disposable: re-seeds from database/init)."
   docker compose down >/dev/null 2>&1 || true
   remove_pgdata_volume
   docker compose up -d "$DB_SERVICE" >/dev/null
   wait_postgres_healthy
   if ! test_db_password; then
-    echo "!!! FATAL: auth still failing after volume reset. Check .env / DB_PASSWORD." >&2
+    echo "!!! FATAL: auth/database still failing after volume reset. Check .env / DB_PASSWORD." >&2
     exit 1
   fi
-  echo ">>> OK: volume reset and DB_PASSWORD=$DB_PASSWORD now works."
+  echo ">>> OK: volume reset — DB_PASSWORD=$DB_PASSWORD works and 'campaign_bot' exists."
 fi
 
 # ---------------------------------------------------------------------------
