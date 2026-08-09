@@ -160,7 +160,10 @@ for i in $(seq 1 30); do
 
   if echo "$LOGS" | grep -q "HikariPool-1 - Added connection"; then
     echo ">>> OK: app connected to PostgreSQL."
-    echo ">>> Deploy complete. Verify with: docker logs $CONTAINER_ID | grep Started"
+    echo ">>> Deploy complete. Deployment fingerprint:"
+    docker ps --filter "id=$CONTAINER_ID" --format "  container: {{.Names}}  {{.Status}}"
+    docker inspect "$CONTAINER_ID" --format "  image id:   {{.Image}}  created {{.Created}}"
+    echo "  databases: $(docker exec campaign-bot-db psql -U postgres -tAc "SELECT string_agg(datname, ', ' ORDER BY datname) FROM pg_database" 2>/dev/null || echo 'n/a')"
     exit 0
   fi
 
