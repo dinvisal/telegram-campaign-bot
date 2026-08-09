@@ -141,8 +141,12 @@ fi
 # ---------------------------------------------------------------------------
 # Start full stack and verify the app connected
 # ---------------------------------------------------------------------------
-echo ">>> Starting stack..."
-docker compose up -d
+# --force-recreate is CRITICAL: after a rebuild, `docker compose up -d` alone
+# will NOT replace an already-running container — production would keep running
+# the old image (old baked-in config) indefinitely. Force recreation so the
+# newly built image always takes effect.
+echo ">>> Starting stack (forcing container recreation)..."
+docker compose up -d --force-recreate
 
 CONTAINER_ID=$(docker compose ps -q "$APP_SERVICE" 2>/dev/null || true)
 if [ -z "$CONTAINER_ID" ]; then
@@ -160,10 +164,10 @@ for i in $(seq 1 30); do
     exit 0
   fi
 
-  if echo "$LOGS" | grep -qE "password authentication failed|Schema-validation|Failed to validate|Unable to determine Dialect|does not exist|missing table"; then
-    echo "!!! FATAL: app could not connect to / validate the database." >&2
+  if echo "$LOGS" | grep -qE "password authentication failed|Schema-validation|Failed to validate|Unable to determine Dialect|does not exist|missing table|APPLICATION FAILED"; then
+    echo "!!! FATAL: app could not connect to / validate the database (or failed to start)." >&2
     echo "!!! Root cause:" >&2
-    echo "$LOGS" | grep -E "Caused by|PSQLException|Connection refused|UnknownHost|authentication failed|Unable to determine Dialect|does not exist|missing table" | tail -6 >&2
+    echo "$LOGS" | grep -E "Caused by|PSQLException|Connection refused|UnknownHost|authentication failed|Unable to determine Dialect|does not exist|missing table|APPLICATION FAILED" | tail -6 >&2
     exit 1
   fi
 
