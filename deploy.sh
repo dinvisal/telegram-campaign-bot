@@ -105,22 +105,34 @@ if [ "$RESET_DB" -eq 1 ]; then
 fi
 
 # ---------------------------------------------------------------------------
-# SELF-HEALING: start postgres, verify credentials, reset if stale
+# SELF-HEALING: start postgres, RE-ASSERT the password (non-destructive),
+# verify auth, and only fall back to a volume reset if the DB is missing.
 # ---------------------------------------------------------------------------
 echo ">>> Starting $DB_SERVICE..."
 docker compose up -d "$DB_SERVICE" >/dev/null
 wait_postgres_healthy
 
+# The official postgres image TRUSTS local socket connections, so ALTER USER
+# works even if the stored password drifted (or was changed by something else
+# on the server). Re-asserting on every deploy makes password drift unable to
+# survive a deployment — without wiping any data.
+echo ">>> Re-asserting DB password (non-destructive ALTER USER)..."
+if ! docker exec campaign-bot-db psql -U postgres -c "ALTER USER postgres WITH PASSWORD '$DB_PASSWORD';" >/dev/null 2>&1; then
+  echo "!!! WARN: could not re-assert password via local socket (trust may be off)." >&2
+  echo "!!! Falling back to credential test only." >&2
+fi
+
 if test_db_password; then
   echo ">>> OK: DB_PASSWORD=$DB_PASSWORD works against the live database."
 else
-  echo "!!! Volume problem detected: either the password on the volume does NOT match"
+  echo "!!! Volume problem detected: either the password still does NOT match"
   echo "!!! DB_PASSWORD=$DB_PASSWORD, or the 'campaign_bot' database was never created."
   echo "!!! Resetting volume automatically (data is disposable: re-seeds from database/init)."
   docker compose down >/dev/null 2>&1 || true
   remove_pgdata_volume
   docker compose up -d "$DB_SERVICE" >/dev/null
   wait_postgres_healthy
+  docker exec campaign-bot-db psql -U postgres -c "ALTER USER postgres WITH PASSWORD '$DB_PASSWORD';" >/dev/null 2>&1 || true
   if ! test_db_password; then
     echo "!!! FATAL: auth/database still failing after volume reset. Check .env / DB_PASSWORD." >&2
     exit 1
