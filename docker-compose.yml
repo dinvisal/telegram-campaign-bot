@@ -11,8 +11,12 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
 
+    # Host port is bound to loopback ONLY. The app connects over the compose
+    # network (jdbc:postgresql://postgres/campaign_bot), so 5432 must not be
+    # exposed publicly. 127.0.0.1 keeps host-local dev/CI/psql working while
+    # blocking internet access (production security fix, 2026-08-17).
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
 
     volumes:
       - pgdata:/var/lib/postgresql/data
@@ -46,7 +50,7 @@ services:
       - "8080:8080"
 
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/campaign_bot
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres/campaign_bot
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-postgres}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
