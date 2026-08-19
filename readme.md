@@ -55,6 +55,7 @@ Configure the following environment variables before running:
 | `SPRING_DATASOURCE_USERNAME` | Database username |
 | `SPRING_DATASOURCE_PASSWORD` | Database password |
 | `TELEGRAM_BOT_TOKEN` | Telegram Bot Token |
+| `TELEGRAM_REPORT_CHAT_ID` | Telegram chat ID receiving the scheduled 08:00 / 21:00 campaign report (default `399337142`) |
 
 Example:
 
@@ -63,6 +64,7 @@ SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/campaign_bot
 SPRING_DATASOURCE_USERNAME=postgres
 SPRING_DATASOURCE_PASSWORD=postgres
 TELEGRAM_BOT_TOKEN=xxxxxxxxxxxxxxxx
+TELEGRAM_REPORT_CHAT_ID=682472724
 ```
 
 ---

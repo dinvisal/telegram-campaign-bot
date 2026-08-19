@@ -1,11 +1,16 @@
 /Users/macbook/.accio/accounts/7080368235/agents/DID-0D58EF-FA849A/project/telegram-campaign-bot/src/main/java/com/example/campaignbot/CampaignBotApplication.java
 /Users/macbook/.accio/accounts/7080368235/agents/DID-0D58EF-FA849A/project/telegram-campaign-bot/src/main/java/com/example/campaignbot/bot/CampaignBot.java
 /Users/macbook/.accio/accounts/7080368235/agents/DID-0D58EF-FA849A/project/telegram-campaign-bot/src/main/java/com/example/campaignbot/config/RestTemplateConfig.java
+/Users/macbook/.accio/accounts/7080368235/agents/DID-0D58EF-FA849A/project/telegram-campaign-bot/src/main/java/com/example/campaignbot/dto/RawCampaign.java
 /Users/macbook/.accio/accounts/7080368235/agents/DID-0D58EF-FA849A/project/telegram-campaign-bot/src/main/java/com/example/campaignbot/entity/Campaign.java
 /Users/macbook/.accio/accounts/7080368235/agents/DID-0D58EF-FA849A/project/telegram-campaign-bot/src/main/java/com/example/campaignbot/entity/FacebookPage.java
 /Users/macbook/.accio/accounts/7080368235/agents/DID-0D58EF-FA849A/project/telegram-campaign-bot/src/main/java/com/example/campaignbot/repository/CampaignRepository.java
 /Users/macbook/.accio/accounts/7080368235/agents/DID-0D58EF-FA849A/project/telegram-campaign-bot/src/main/java/com/example/campaignbot/repository/FacebookPageRepository.java
+/Users/macbook/.accio/accounts/7080368235/agents/DID-0D58EF-FA849A/project/telegram-campaign-bot/src/main/java/com/example/campaignbot/scheduler/CampaignReportScheduler.java
 /Users/macbook/.accio/accounts/7080368235/agents/DID-0D58EF-FA849A/project/telegram-campaign-bot/src/main/java/com/example/campaignbot/scheduler/CampaignSyncScheduler.java
+/Users/macbook/.accio/accounts/7080368235/agents/DID-0D58EF-FA849A/project/telegram-campaign-bot/src/main/java/com/example/campaignbot/service/CampaignParser.java
+/Users/macbook/.accio/accounts/7080368235/agents/DID-0D58EF-FA849A/project/telegram-campaign-bot/src/main/java/com/example/campaignbot/service/CampaignReportFormatter.java
 /Users/macbook/.accio/accounts/7080368235/agents/DID-0D58EF-FA849A/project/telegram-campaign-bot/src/main/java/com/example/campaignbot/service/CampaignService.java
+/Users/macbook/.accio/accounts/7080368235/agents/DID-0D58EF-FA849A/project/telegram-campaign-bot/src/main/java/com/example/campaignbot/service/FacebookAdsClient.java
 /Users/macbook/.accio/accounts/7080368235/agents/DID-0D58EF-FA849A/project/telegram-campaign-bot/src/main/java/com/example/campaignbot/service/FacebookAdsService.java
 /Users/macbook/.accio/accounts/7080368235/agents/DID-0D58EF-FA849A/project/telegram-campaign-bot/src/main/java/com/example/campaignbot/service/TelegramMessageService.java
