@@ -83,7 +83,7 @@ public class CampaignReportFormatter {
         sb.append("Campaigns: ").append(totalCampaigns).append("\n");
         sb.append("Ads Accounts: ").append(grouped.size()).append("\n");
         sb.append("Messages: ").append(totalMessages).append("\n");
-        sb.append("Total Spend: $").append(formatAmount(totalSpend)).append("\n");
+        // sb.append("Total Spend: $").append(formatAmount(totalSpend)).append("\n");
 
         return sb.toString();
     }
