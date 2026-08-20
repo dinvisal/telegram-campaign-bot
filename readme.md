@@ -55,7 +55,7 @@ Configure the following environment variables before running:
 | `SPRING_DATASOURCE_USERNAME` | Database username |
 | `SPRING_DATASOURCE_PASSWORD` | Database password |
 | `TELEGRAM_BOT_TOKEN` | Telegram Bot Token |
-| `TELEGRAM_REPORT_CHAT_ID` | Telegram chat ID receiving the scheduled 08:00 / 21:00 campaign report (default `399337142`) |
+| `TELEGRAM_REPORT_CHAT_ID` | Telegram chat ID receiving the scheduled 08:00 / 21:00 campaign report (default `5320080201`) |
 
 Example:
 

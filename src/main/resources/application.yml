@@ -41,7 +41,7 @@ telegram:
   report:
     # Chat that receives the scheduled 08:00 / 21:00 campaign report
     # (default: the admin chat seen in production logs).
-    chat-id: ${TELEGRAM_REPORT_CHAT_ID:399337142}
+    chat-id: ${TELEGRAM_REPORT_CHAT_ID:5320080201}
 
 logging:
   level:
